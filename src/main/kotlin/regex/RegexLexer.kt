@@ -12,26 +12,35 @@ object RegexLexer {
                 continue
             }
 
-            val type = when (regex[index]) {
-                '('  -> RegexType.LBRACKET
-                ')'  -> RegexType.RBRACKET
-                '['  -> RegexType.LSQUAREBRACKET
-                ']'  -> RegexType.RSQUAREBRACKET
-                '|'  -> RegexType.UNION
-                '*'  -> RegexType.STAR
-                '+'  -> RegexType.PLUS
-                '?'  -> RegexType.QUESTION
-                '.'  -> RegexType.ANY
-                '$'  -> RegexType.EOS
-                '-'  -> RegexType.MINUS
-                '\\' -> RegexType.BACKSLASH
-                '^'  -> RegexType.EXCEPT
-                !in metacharacters -> RegexType.CHAR
-                else -> RegexType.EMPTY
+            if (regex[index] == '"') {
+                index++
+                val start = index
+                while (regex[index] != '"') { index++ }
+                tokens.add(RegexToken(regex.substring(start until index), RegexType.STRING))
+                index++
             }
+            else {
+                val type = when (regex[index]) {
+                    '(' -> RegexType.LBRACKET
+                    ')' -> RegexType.RBRACKET
+                    '[' -> RegexType.LSQUAREBRACKET
+                    ']' -> RegexType.RSQUAREBRACKET
+                    '|' -> RegexType.UNION
+                    '*' -> RegexType.STAR
+                    '+' -> RegexType.PLUS
+                    '?' -> RegexType.QUESTION
+                    '.' -> RegexType.ANY
+                    '$' -> RegexType.EOS
+                    '-' -> RegexType.MINUS
+                    '\\' -> RegexType.BACKSLASH
+                    '^' -> RegexType.EXCEPT
+                    !in metacharacters -> RegexType.CHAR
+                    else -> RegexType.EMPTY
+                }
 
-            tokens.add(RegexToken(regex[index], type))
-            index++
+                tokens.add(RegexToken(regex[index].toString(), type))
+                index++
+            }
         }
 
         return tokens

@@ -13,5 +13,6 @@ abstract class Visitor {
     open fun visitStarNode(node: StarNode): Any = Unit
     open fun visitQuestionNode(node: QuestionNode): Any = Unit
     open fun visitUnionNode(node: UnionNode): Any = Unit
+    open fun visitStringNode(node: StringNode): Any = Unit
     open fun visitEmptyNode(node: EmptyNode): Any = Unit
 }

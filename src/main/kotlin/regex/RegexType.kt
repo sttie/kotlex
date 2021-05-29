@@ -1,6 +1,7 @@
 package regex
 
 enum class RegexType {
+    STRING,
     UNION,
     STAR,
     PLUS,

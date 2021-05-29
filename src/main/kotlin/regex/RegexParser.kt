@@ -56,9 +56,9 @@ object RegexParser {
 
         if (lookToken().type == RegexType.STAR || lookToken().type == RegexType.PLUS || lookToken().type == RegexType.QUESTION) {
             elementaryNode = when (lookToken().type) {
-                RegexType.STAR -> StarNode(elementaryNode)
-                RegexType.PLUS -> PlusNode(elementaryNode)
-                else           -> QuestionNode(elementaryNode)
+                RegexType.STAR   -> StarNode(elementaryNode)
+                RegexType.PLUS   -> PlusNode(elementaryNode)
+                else             -> QuestionNode(elementaryNode)
             }
 
             getToken()
@@ -77,6 +77,7 @@ object RegexParser {
             RegexType.EOS -> parseEos()
             RegexType.CHAR -> parseChar()
             RegexType.LSQUAREBRACKET -> parseSet()
+            RegexType.STRING -> parseString()
             else -> panic("Unexpected token: ${lookToken()}")
         }
     }
@@ -150,7 +151,7 @@ object RegexParser {
         if (!isMetacharacter(lookToken()) || notEnd(1)
             && lookToken().type == RegexType.BACKSLASH && isMetacharacter(lookNextToken())
         ) {
-            val charNode = CharNode(getToken().lexeme)
+            val charNode = CharNode(getToken().lexeme[0])
             if (updateAlphabet)
                 alphabet.add(TransitionCharacter(charNode.char))
             return charNode
@@ -159,16 +160,22 @@ object RegexParser {
         panic("Expected character")
     }
 
+    private fun parseString(): StringNode {
+        for (char in lookToken().lexeme)
+            alphabet.add(TransitionCharacter(char))
+        return StringNode(getToken().lexeme)
+    }
+
     private fun lookToken(): RegexToken = if (current < tokens.size) tokens[current] else RegexToken(
-        '\b',
+        "\b",
         RegexType.END
     )
     private fun lookNextToken(): RegexToken = if (current < tokens.size - 1) tokens[current + 1] else RegexToken(
-        '\b',
+        "\b",
         RegexType.EMPTY
     )
     private fun getToken(): RegexToken = if (current < tokens.size) tokens[current++] else RegexToken(
-        '\b',
+        "\b",
         RegexType.END
     )
 

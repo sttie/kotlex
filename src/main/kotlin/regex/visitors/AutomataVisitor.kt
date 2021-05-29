@@ -153,6 +153,22 @@ class AutomataVisitor : Visitor() {
         return unionNfaAutomata
     }
 
+    override fun visitStringNode(node: StringNode): Any {
+        val stringNfaAutomata = NFAAutomata()
+        val stringNfaAcceptingState = stringNfaAutomata.createAcceptingState()
+
+        var currentState = stringNfaAutomata.startState
+        for (i in 0 until node.lexeme.length - 1) {
+            val newState = stringNfaAutomata.createState()
+            stringNfaAutomata.addTransition(currentState, TransitionCharacter(node.lexeme[i]), newState)
+            currentState = newState
+        }
+
+        stringNfaAutomata.addTransition(currentState, TransitionCharacter(node.lexeme.last()), stringNfaAcceptingState)
+
+        return stringNfaAutomata
+    }
+
     // r = char
     override fun visitCharNode(node: CharNode): NFAAutomata {
         val charNfaAutomata = NFAAutomata()

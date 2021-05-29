@@ -52,6 +52,10 @@ class PrintVisitor : Visitor() {
         processIndentation(arrayListOf(node.left ?: EmptyNode, node.right ?: EmptyNode))
     }
 
+    override fun visitStringNode(node: StringNode) {
+        printNode(node)
+    }
+
     private fun printNode(node: RegexNode) {
         if (indentation != 0) {
             print("${"\t".repeat(indentation)}|")

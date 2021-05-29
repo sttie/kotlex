@@ -1,0 +1,10 @@
+import SimpleIdsTokenType
+
+enumtype is SimpleIdsTokenType
+
+data:
+val a: Int = 0
+
+rules:
+identifiers := [_a-zA-Z][_a-zA-Z0-9]*, SimpleIdsTokenType.ID { }
+number := [0-9]+, SimpleIdsTokenType.NUMBER { }
