@@ -1,0 +1,11 @@
+import KlexerTokenType
+
+enumtype is KlexerTokenType
+
+data:
+val a: Int = 0
+val b: String = "abc"
+
+rules:
+identifiers := [_a-zA-Z][_a-zA-Z0-9]*, KlexerTokenType.ID { println("Lol") }
+number := [0-9]+, KlexerTokenType.NUMBER { println() }
