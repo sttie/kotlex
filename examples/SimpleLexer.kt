@@ -586,7 +586,7 @@ class Kotlex {
 		)
 		
 		while (true) {
-			if (current >= input.length) return null
+			if (current >= input.length + 1) return null
 
 			var newState = if (current < input.length) (kotlexTable[currentState] ?: HashMap()).getOrDefault(input[current], -1) else -1
 			

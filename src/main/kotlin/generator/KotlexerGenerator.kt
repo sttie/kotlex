@@ -81,7 +81,7 @@ object KotlexerGenerator {
 
             outputFile.appendTextWithTabs("\n", tabs)
             generateWhile("true") {
-                outputFile.appendTextWithTabs("if (current >= input.length) return null\n\n", tabs)
+                outputFile.appendTextWithTabs("if (current >= input.length + 1) return null\n\n", tabs)
 
                 outputFile.appendTextWithTabs(
                     "var newState = if (current < input.length) (kotlexTable[currentState] ?: HashMap()).getOrDefault(input[current], -1)"
