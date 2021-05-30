@@ -43,16 +43,18 @@ object KotlexerGenerator {
     private fun generateClassCode(format: Format) {
         outputFile.appendTextWithTabs("class Kotlex {\n", tabs)
 
+        val (dfa, alphabet, acceptingStatesToTypes) = generateDfaFromRules(format)
+
         tabs++
-        generateDataDeclarations(format)
+        generateDataDeclarations(format, dfa)
         generateResetFunction()
-        generateGetTokenFunction(format)
+        generateGetTokenFunction(dfa, acceptingStatesToTypes)
         tabs--
 
         outputFile.appendTextWithTabs("}\n", tabs)
     }
 
-    private fun generateDataDeclarations(format: Format) {
+    private fun generateDataDeclarations(format: Format, dfa: DFAAutomata) {
         for (line in format.dataCode.split("\n")) {
             if (line.isNotEmpty())
                 outputFile.appendTextWithTabs("$line\n", tabs)
@@ -60,6 +62,8 @@ object KotlexerGenerator {
 
         outputFile.appendTextWithTabs("var input = \"\"\n", tabs)
         outputFile.appendTextWithTabs("var current = 0\n\n", tabs)
+
+        generateTransitionTable(dfa)
     }
 
     private fun generateResetFunction() {
@@ -69,25 +73,20 @@ object KotlexerGenerator {
         }
     }
 
-    private fun generateGetTokenFunction(format: Format) {
-        val (dfa, acceptingStatesToTypes) = generateDfaFromRules(format)
-
-        generateFunction("getToken", "", "Token") {
+    private fun generateGetTokenFunction(dfa: DFAAutomata, acceptingStatesToTypes: HashMap<State, String>) {
+        generateFunction("getToken", "", "Token?") {
             outputFile.appendTextWithTabs("var currentState = ${dfa.startState.id}\n", tabs)
             outputFile.appendTextWithTabs("var start = current\n", tabs)
-
             generateTypesMap(acceptingStatesToTypes)
 
             outputFile.appendTextWithTabs("\n", tabs)
             generateWhile("true") {
-                outputFile.appendTextWithTabs("var newState = -1\n\n", tabs)
-                generateIf("current < input.length") {
-                    generateWhenDeclaration("currentState") {
-                        for ((state, transition) in dfa.transitionTable.transitionTable) {
-                            generateStateTransition(state, transition)
-                        }
-                    }
-                }
+                outputFile.appendTextWithTabs("if (current >= input.length) return null\n\n", tabs)
+
+                outputFile.appendTextWithTabs(
+                    "var newState = if (current < input.length) (kotlexTable[currentState] ?: HashMap()).getOrDefault(input[current], -1)"
+                    + " else -1\n", tabs
+                )
 
                 outputFile.appendTextWithTabs("\n", tabs)
                 generateIf("newState == -1 && currentState in acceptingStatesToTypes") {
@@ -135,6 +134,34 @@ object KotlexerGenerator {
         outputFile.appendTextWithTabs(")\n", tabs)
     }
 
+    private fun generateTransitionTable(dfa: DFAAutomata) {
+        outputFile.appendTextWithTabs("val kotlexTable = HashMap<Int, HashMap<Char, Int>>()\n", tabs)
+
+        for ((state, _) in dfa.transitionTable.transitionTable) {
+            generateNthStateTable(state, dfa)
+        }
+
+        outputFile.appendTextWithTabs("init {\n", tabs)
+        tabs++
+
+        for ((state, _) in dfa.transitionTable.transitionTable) {
+            outputFile.appendTextWithTabs("set${state.id}State()\n", tabs)
+        }
+
+        tabs--
+        outputFile.appendTextWithTabs("}\n\n", tabs)
+    }
+
+    private fun generateNthStateTable(state: State, dfa: DFAAutomata) {
+        generateFunction("set${state.id}State", "", "Unit") {
+            outputFile.appendTextWithTabs("kotlexTable[${state.id}] = HashMap()\n", tabs)
+            for ((transitionChar, destState) in dfa.transit(state) ?: HashMap()) {
+                for (char in transitionChar.characters)
+                    outputFile.appendTextWithTabs("kotlexTable[${state.id}]!!['${char}'] = ${destState.id}\n", tabs)
+            }
+        }
+    }
+
     private fun generateStateTransition(state: State, transition: HashMap<TransitionCharacter, State>) {
         outputFile.appendTextWithTabs("${state.id} -> ", tabs)
 
@@ -143,15 +170,17 @@ object KotlexerGenerator {
         generateWhenDeclaration("input[current]") {
             tabs = oldTabs + 1
             for ((char, destState) in transition)
-                outputFile.appendTextWithTabs("in '${char.characters.first}'..'${char.characters.last}' -> newState = ${destState.id}\n", tabs)
+                outputFile.appendTextWithTabs("in '${char.characters.first()}'..'${char.characters.last()}' -> newState = ${destState.id}\n", tabs)
             outputFile.appendTextWithTabs("else -> newState = -1\n", tabs)
         }
         tabs = oldTabs
     }
 
-    private fun generateDfaFromRules(format: Format): Pair<DFAAutomata, HashMap<State, String>> {
+    private fun generateDfaFromRules(
+        format: Format
+    ): Triple<DFAAutomata, HashSet<Char>, HashMap<State, String>> {
         val nfa = NFAAutomata()
-        val alphabetSet = HashSet<TransitionCharacter>()
+        val alphabetSet = HashSet<Char>()
         val acceptingStatesToType = HashMap<State, String>()
 
         for (rule in format.rulesList) {
@@ -167,6 +196,7 @@ object KotlexerGenerator {
         }
 
         val (dfa, dfaToNfaStates) = nfa.convertToDFA(alphabetSet)
+        dfa.minimize(alphabetSet)
 
         val acceptingDfaStatesType = HashMap<State, String>()
         for ((acceptingNfaState, tokenType) in acceptingStatesToType) {
@@ -177,7 +207,7 @@ object KotlexerGenerator {
             }
         }
 
-        return dfa to acceptingDfaStatesType
+        return Triple(dfa, alphabetSet, acceptingDfaStatesType)
     }
 
     private fun generateWhenDeclaration(whenCondition: String, bodyGenerator: () -> Unit) {

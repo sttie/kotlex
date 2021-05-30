@@ -2,6 +2,7 @@ import generator.KotlexerGenerator
 import parsing.FormatFileParser
 import java.io.File
 
+
 object KotlexMain {
     @JvmStatic
     fun main(args: Array<String>) {

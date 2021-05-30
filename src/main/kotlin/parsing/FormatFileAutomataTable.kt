@@ -20,7 +20,7 @@ class FormatFileAutomataTable {
 
     operator fun get(state: FormatFileState, byChar: TransitionCharacter): FormatFileState? {
         if (!byChar.isSpecial() && !byChar.isRange())
-            return get(state, byChar.characters.first)
+            return get(state, byChar.characters.first())
         if (!byChar.isSpecial() && byChar.isRange())
             throw IllegalStateException("Unexpected range in table's get function")
         if (byChar.isAny())

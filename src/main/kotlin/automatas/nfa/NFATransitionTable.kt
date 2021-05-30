@@ -25,7 +25,7 @@ class NFATransitionTable {
 
     operator fun get(state: State, byChar: TransitionCharacter): HashSet<State>? {
         if (!byChar.isSpecial() && !byChar.isRange())
-            return get(state, byChar.characters.first)
+            return get(state, byChar.characters.first())
         if (!byChar.isSpecial() && byChar.isRange())
             throw IllegalStateException("Unexpected range in table's get function")
         if (byChar.isAny())

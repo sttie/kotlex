@@ -7,8 +7,13 @@ import automatas.TransitionCharacter
 class DFATransitionTable {
     val transitionTable = HashMap<State, HashMap<TransitionCharacter, State>>()
 
-    fun hasTransition(from: State, byChar: TransitionCharacter): Boolean
-            = (transitionTable[from] ?: HashMap()).containsKey(byChar)
+    // TODO: Any characters!
+    fun hasTransition(from: State, byChar: TransitionCharacter): Boolean {
+        for ((transChar, destState) in transitionTable[from] ?: HashMap())
+            if (byChar.isEpsilon() && transChar.isEpsilon() || transChar.characters == byChar.characters)
+                return true
+        return false
+    }
 
     fun containsState(state: State) = transitionTable.containsKey(state)
 
@@ -18,9 +23,11 @@ class DFATransitionTable {
         transitionTable[from]!![byChar] = to
     }
 
+    operator fun get(state: State) = transitionTable[state]
+
     operator fun get(state: State, byChar: TransitionCharacter): State? {
         if (!byChar.isSpecial() && !byChar.isRange())
-            return get(state, byChar.characters.first)
+            return get(state, byChar.characters.first())
         if (!byChar.isSpecial() && byChar.isRange())
             throw IllegalStateException("Unexpected range in table's get function")
         if (byChar.isAny())

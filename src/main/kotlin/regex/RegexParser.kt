@@ -6,11 +6,12 @@ import regex.ast.*
 object RegexParser {
     private var current = 0
     private var tokens = ArrayList<RegexToken>()
-    private val alphabet = HashSet<TransitionCharacter>()
+    private val alphabet = HashSet<Char>()
 
-    fun parseRegex(regex: String): Pair<RegexNode, HashSet<TransitionCharacter>> {
+    fun parseRegex(regex: String): Pair<RegexNode, HashSet<Char>> {
         tokens = RegexLexer.lex(regex)
         current = 0
+        alphabet.clear()
 
         return parseUnion() to alphabet
     }
@@ -130,7 +131,7 @@ object RegexParser {
         match(lookToken().type == RegexType.CHAR, "Expected char")
         return if (lookNextToken().type == RegexType.MINUS) parseRange() else {
             val charNode = parseChar(false)
-            alphabet.add(TransitionCharacter(charNode.char))
+            alphabet.add(charNode.char)
             return RangeNode(charNode, charNode)
         }
     }
@@ -141,7 +142,9 @@ object RegexParser {
         match(getToken().type == RegexType.MINUS, "Expected \"-\"")
         val rightCharNode = parseChar(false)
 
-        alphabet.add(TransitionCharacter(leftCharNode.char..rightCharNode.char))
+//        alphabet.add(TransitionCharacter(leftCharNode.char..rightCharNode.char))
+        for (char in leftCharNode.char..rightCharNode.char)
+            alphabet.add(char)
 
         return RangeNode(leftCharNode, rightCharNode)
     }
@@ -153,7 +156,7 @@ object RegexParser {
         ) {
             val charNode = CharNode(getToken().lexeme[0])
             if (updateAlphabet)
-                alphabet.add(TransitionCharacter(charNode.char))
+                alphabet.add(charNode.char)
             return charNode
         }
 
@@ -162,7 +165,7 @@ object RegexParser {
 
     private fun parseString(): StringNode {
         for (char in lookToken().lexeme)
-            alphabet.add(TransitionCharacter(char))
+            alphabet.add(char)
         return StringNode(getToken().lexeme)
     }
 

@@ -48,7 +48,7 @@ fun NFAAutomata.uniteAutomatas(other: NFAAutomata, withAccepting: Boolean = fals
 }
 
 
-fun NFAAutomata.convertToDFA(alphabet: Collection<TransitionCharacter>): Pair<DFAAutomata, HashMap<State, HashSet<State>>> {
+fun NFAAutomata.convertToDFA(alphabet: Collection<Char>): Pair<DFAAutomata, HashMap<State, HashSet<State>>> {
     val dfaAutomata = DFAAutomata()
 
     val stateSetsId = HashMap<HashSet<State>, State>()
@@ -78,7 +78,7 @@ fun NFAAutomata.convertToDFA(alphabet: Collection<TransitionCharacter>): Pair<DF
         }
 
         for (character in alphabet) {
-            val uState = epsilonClosure(move(currentState, character.characters.first))
+            val uState = epsilonClosure(move(currentState, character))
             if (uState.size == 0)
                 continue
 
@@ -101,4 +101,9 @@ fun NFAAutomata.convertToDFA(alphabet: Collection<TransitionCharacter>): Pair<DF
     }
 
     return dfaAutomata to dfaStateToId
+}
+
+
+fun DFAAutomata.minimize(alphabet: HashSet<Char>) {
+
 }

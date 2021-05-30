@@ -17,13 +17,21 @@ class DFAAutomata {
         transitionTable.add(from, byChar, to)
     }
 
+    fun addTransition(from: State, byChar: Char, to: State) {
+        addTransition(from, TransitionCharacter(byChar), to)
+    }
+
     fun transit(from: State, byChar: TransitionCharacter): State?
             = transitionTable[from, byChar]
 
     fun transit(from: State, byChar: Char): State?
             = transitionTable[from, byChar]
 
+    fun transit(from: State): HashMap<TransitionCharacter, State>?
+        = transitionTable[from]
+
     fun hasTransition(from: State, byChar: TransitionCharacter) = transitionTable.hasTransition(from, byChar)
+    fun hasTransition(from: State, byChar: Char) = transitionTable.hasTransition(from, TransitionCharacter(byChar))
 
     fun addAccepting(state: State) {
         acceptingStates.add(state)
