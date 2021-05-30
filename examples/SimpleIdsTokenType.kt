@@ -1,4 +1,4 @@
 enum class SimpleIdsTokenType {
-    FOR,
-    IF
+    ID,
+    NUMBER
 }
