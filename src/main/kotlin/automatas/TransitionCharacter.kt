@@ -22,8 +22,8 @@ class TransitionCharacter(val characters: CharRange) {
 
     override fun toString(): String =
         when (this) {
-            EPSILON -> "Epsilon"
-            ANY     -> "Any"
+            EPSILON -> "EPSILON"
+            ANY     -> "ANY"
             else    -> characters.toString()
         }
 }

@@ -7,11 +7,6 @@ import regex.visitors.NFAAutomataVisitor
 import java.io.File
 
 
-fun File.appendTextWithTabs(text: String, tabs: Int) {
-    appendText("${"\t".repeat(tabs)}$text")
-}
-
-
 object KotlexerGenerator {
     lateinit var outputFile: File
     var tabs = 0
@@ -28,20 +23,20 @@ object KotlexerGenerator {
 
     private fun generateImportCode(importList: ArrayList<String>) {
         for (importStatement in importList)
-            outputFile.appendTextWithTabs("import $importStatement\n", tabs)
-        outputFile.appendTextWithTabs("\n\n", tabs)
+            appendTextWithTabs("import $importStatement\n")
+        appendTextWithTabs("\n\n")
     }
 
     private fun generateTokenClass(format: Format) {
-        outputFile.appendTextWithTabs(
+        appendTextWithTabs(
             "data class Token(val lexeme: String, val type: ${format.type}?, val start: Int)\n\n",
-            tabs)
+        )
     }
 
     private fun generateClassCode(format: Format) {
-        outputFile.appendTextWithTabs("class Kotlex {\n", tabs)
+        appendTextWithTabs("class Kotlex {\n")
 
-        val (dfa, alphabet, acceptingStatesToTypes) = generateDfaFromRules(format)
+        val (dfa, acceptingStatesToTypes) = generateDfaFromRules(format)
 
         tabs++
         generateDataDeclarations(format, dfa)
@@ -49,74 +44,73 @@ object KotlexerGenerator {
         generateGetTokenFunction(dfa, acceptingStatesToTypes)
         tabs--
 
-        outputFile.appendTextWithTabs("}\n", tabs)
+        appendTextWithTabs("}\n")
     }
 
     private fun generateDataDeclarations(format: Format, dfa: DFAAutomata) {
         for (line in format.dataCode.split("\n")) {
             if (line.isNotEmpty())
-                outputFile.appendTextWithTabs("$line\n", tabs)
+                appendTextWithTabs("$line\n")
         }
 
-        outputFile.appendTextWithTabs("var input = \"\"\n", tabs)
-        outputFile.appendTextWithTabs("var current = 0\n\n", tabs)
+        appendTextWithTabs("var input = \"\"\n")
+        appendTextWithTabs("var current = 0\n\n")
 
         generateTransitionTable(dfa)
     }
 
     private fun generateResetFunction() {
         generateFunction("reset", "input_: String", "Unit") {
-            outputFile.appendTextWithTabs("input = input_\n", tabs)
-            outputFile.appendTextWithTabs("current = 0\n", tabs)
+            appendTextWithTabs("input = input_\n")
+            appendTextWithTabs("current = 0\n")
         }
     }
 
     private fun generateGetTokenFunction(dfa: DFAAutomata, acceptingStatesToTypes: HashMap<State, String>) {
         generateFunction("getToken", "", "Token?") {
-            outputFile.appendTextWithTabs("var currentState = ${dfa.startState.id}\n", tabs)
-            outputFile.appendTextWithTabs("var start = current\n", tabs)
+            appendTextWithTabs("var currentState = ${dfa.startState.id}\n")
+            appendTextWithTabs("var start = current\n")
             generateTypesMap(acceptingStatesToTypes)
 
-            outputFile.appendTextWithTabs("\n", tabs)
+            appendTextWithTabs("\n")
             generateWhile("true") {
-                outputFile.appendTextWithTabs("if (current >= input.length + 1) return null\n\n", tabs)
+                appendTextWithTabs("if (current >= input.length + 1) return null\n\n")
 
-                outputFile.appendTextWithTabs(
-                    "var newState = if (current < input.length) (kotlexTable[currentState] ?: HashMap()).getOrDefault(input[current], -1)"
-                    + " else -1\n", tabs
+                appendTextWithTabs(
+                    "var newState = if (current < input.length) (kotlexTable[currentState] ?: " +
+                            "HashMap()).getOrDefault(input[current], -1) else -1\n"
                 )
 
-                outputFile.appendTextWithTabs("\n", tabs)
+                appendTextWithTabs("\n")
                 generateIf("newState == -1 && currentState in acceptingStatesToTypes") {
-                    outputFile.appendTextWithTabs(
+                    appendTextWithTabs(
                         "return Token(input.substring(start until current), acceptingStatesToTypes[currentState], start)\n",
-                        tabs
                     )
                 }
                 generateElseIf("newState == -1 && start == current") {
-                    outputFile.appendTextWithTabs("start++\n", tabs)
+                    appendTextWithTabs("start++\n")
                 }
                 generateElseIf("newState == -1") {
-                    outputFile.appendTextWithTabs("throw IllegalStateException(\"Undefined token!\")\n", tabs)
+                    appendTextWithTabs("throw IllegalStateException(\"Undefined token!\")\n")
                 }
                 generateElse {
-                    outputFile.appendTextWithTabs("currentState = newState\n", tabs)
+                    appendTextWithTabs("currentState = newState\n")
                 }
 
-                outputFile.appendTextWithTabs("current++\n", tabs)
+                appendTextWithTabs("current++\n")
             }
         }
     }
 
     private fun generateTypesMap(acceptingStatesToTypes: HashMap<State, String>) {
-        outputFile.appendTextWithTabs("val acceptingStatesToTypes = hashMapOf(\n", tabs)
+        appendTextWithTabs("val acceptingStatesToTypes = hashMapOf(\n")
         tabs++
 
         var lineLimit = 3
         val content = ArrayList<String>()
         for ((state, stateType) in acceptingStatesToTypes) {
             if (lineLimit == 0) {
-                outputFile.appendTextWithTabs("${content.joinToString { it }},\n", tabs)
+                appendTextWithTabs("${content.joinToString { it }},\n")
                 content.clear()
                 lineLimit = 3
             }
@@ -126,34 +120,32 @@ object KotlexerGenerator {
         }
 
         if (lineLimit != 5)
-            outputFile.appendTextWithTabs("${content.joinToString { it }},\n", tabs)
+            appendTextWithTabs("${content.joinToString { it }},\n")
 
         tabs--
-        outputFile.appendTextWithTabs(")\n", tabs)
+        appendTextWithTabs(")\n")
     }
 
     private fun generateTransitionTable(dfa: DFAAutomata) {
-        outputFile.appendTextWithTabs("val kotlexTable = HashMap<Int, HashMap<Char, Int>>()\n", tabs)
+        appendTextWithTabs("val kotlexTable = HashMap<Int, HashMap<Char, Int>>()\n")
 
-        for ((state, _) in dfa.transitionTable) {
+        for ((state, _) in dfa.transitionTable)
             generateNthStateTable(state, dfa)
-        }
 
-        outputFile.appendTextWithTabs("init {\n", tabs)
+        appendTextWithTabs("init {\n")
         tabs++
 
-        for ((state, _) in dfa.transitionTable) {
-            outputFile.appendTextWithTabs("set${state.id}State()\n", tabs)
-        }
+        for ((state, _) in dfa.transitionTable)
+            appendTextWithTabs("set${state.id}State()\n")
 
         tabs--
-        outputFile.appendTextWithTabs("}\n\n", tabs)
+        appendTextWithTabs("}\n\n")
     }
 
     private fun generateNthStateTable(state: State, dfa: DFAAutomata) {
         generateFunction("set${state.id}State", "", "Unit") {
-            outputFile.appendTextWithTabs("kotlexTable[${state.id}] = HashMap()\n", tabs)
-            for ((transitionChar, destState) in (dfa.transit(state) ?: TransitionTable()).table) {
+            appendTextWithTabs("kotlexTable[${state.id}] = HashMap()\n")
+            for ((transitionChar, destState) in (dfa.transit(state) ?: TransitionTable())) {
                 generateStateTransition(state.id, transitionChar, destState.id)
             }
         }
@@ -161,20 +153,17 @@ object KotlexerGenerator {
 
     private fun generateStateTransition(stateId: Int, transitionChar: TransitionCharacter, destId: Int) {
         if (transitionChar.isRange()) {
-            outputFile.appendTextWithTabs("for (char in '${transitionChar.characters.first}'..'${transitionChar.characters.last}')\n", tabs)
+            appendTextWithTabs("for (char in '${transitionChar.characters.first}'..'${transitionChar.characters.last}')\n")
             tabs++
-            outputFile.appendTextWithTabs("kotlexTable[$stateId]!![char] = $destId", tabs)
+            appendTextWithTabs("kotlexTable[$stateId]!![char] = $destId")
             tabs--
         }
-        else {
-            outputFile.appendTextWithTabs("kotlexTable[$stateId]!!['${transitionChar.characters.first}'] = $destId", tabs)
-        }
-        outputFile.appendTextWithTabs("\n", 0)
+        else
+            appendTextWithTabs("kotlexTable[$stateId]!!['${transitionChar.characters.first}'] = $destId")
+        appendTextWithTabs("\n")
     }
 
-    private fun generateDfaFromRules(
-        format: Format
-    ): Triple<DFAAutomata, HashSet<TransitionCharacter>, HashMap<State, String>> {
+    private fun generateDfaFromRules(format: Format): Pair<DFAAutomata, HashMap<State, String>> {
         val nfa = NFAAutomata()
         val alphabetSet = HashSet<TransitionCharacter>()
         val acceptingStatesToType = HashMap<State, String>()
@@ -203,54 +192,58 @@ object KotlexerGenerator {
             }
         }
 
-        return Triple(dfa, alphabetSet, acceptingDfaStatesType)
+        return dfa to acceptingDfaStatesType
     }
 
     private fun generateWhenDeclaration(whenCondition: String, bodyGenerator: () -> Unit) {
-        outputFile.appendTextWithTabs("when ($whenCondition) {\n", tabs)
+        appendTextWithTabs("when ($whenCondition) {\n")
         tabs++
         bodyGenerator()
         tabs--
-        outputFile.appendTextWithTabs("}\n", tabs)
+        appendTextWithTabs("}\n")
     }
 
     private fun generateIf(ifCondition: String, bodyGenerator: () -> Unit) {
-        outputFile.appendTextWithTabs("if ($ifCondition) {\n", tabs)
+        appendTextWithTabs("if ($ifCondition) {\n")
         tabs++
         bodyGenerator()
         tabs--
-        outputFile.appendTextWithTabs("}\n", tabs)
+        appendTextWithTabs("}\n")
     }
 
     private fun generateElseIf(ifCondition: String, bodyGenerator: () -> Unit) {
-        outputFile.appendTextWithTabs("else if ($ifCondition) {\n", tabs)
+        appendTextWithTabs("else if ($ifCondition) {\n")
         tabs++
         bodyGenerator()
         tabs--
-        outputFile.appendTextWithTabs("}\n", tabs)
+        appendTextWithTabs("}\n")
     }
 
     private fun generateElse(bodyGenerator: () -> Unit) {
-        outputFile.appendTextWithTabs("else {\n", tabs)
+        appendTextWithTabs("else {\n")
         tabs++
         bodyGenerator()
         tabs--
-        outputFile.appendTextWithTabs("}\n", tabs)
+        appendTextWithTabs("}\n")
     }
 
     private fun generateFunction(name: String, parameters: String, returnType: String, bodyGenerator: () -> Unit) {
-        outputFile.appendTextWithTabs("fun $name($parameters): $returnType {\n", tabs)
+        appendTextWithTabs("fun $name($parameters): $returnType {\n")
         tabs++
         bodyGenerator()
         tabs--
-        outputFile.appendTextWithTabs("}\n\n", tabs)
+        appendTextWithTabs("}\n\n")
     }
 
     private fun generateWhile(condition: String, bodyGenerator: () -> Unit) {
-        outputFile.appendTextWithTabs("while ($condition) {\n", tabs)
+        appendTextWithTabs("while ($condition) {\n")
         tabs++
         bodyGenerator()
         tabs--
-        outputFile.appendTextWithTabs("}\n", tabs)
+        appendTextWithTabs("}\n")
+    }
+
+    private fun appendTextWithTabs(text: String) {
+        outputFile.appendText("${"\t".repeat(tabs)}$text")
     }
 }

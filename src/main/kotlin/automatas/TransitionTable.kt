@@ -3,11 +3,11 @@ package automatas
 class TransitionTable<T> {
     val table = LinkedHashMap<TransitionCharacter, T>()
 
-    fun add(byChar: TransitionCharacter, to: T) {
-        table[byChar] = to
-    }
+    fun add(byChar: TransitionCharacter, to: T) =
+        table.put(byChar, to)
 
-    fun hasTransition(byChar: TransitionCharacter) = table.containsKey(byChar)
+    fun hasTransition(byChar: TransitionCharacter) =
+        table.containsKey(byChar)
 
     operator fun get(byChar: TransitionCharacter): T? {
         if (byChar.isAny())
@@ -18,4 +18,6 @@ class TransitionTable<T> {
                 return to
         return null
     }
+
+    operator fun iterator() = table.iterator()
 }

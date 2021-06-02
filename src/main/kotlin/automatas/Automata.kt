@@ -2,8 +2,9 @@ package automatas
 
 class Automata<To> {
     val transitionTable = HashMap<State, TransitionTable<To>>()
-    var startState: State = createState()
     val acceptingStates = HashSet<State>()
+    var startState: State = createState()
+
 
     fun hasState(state: State): Boolean = transitionTable.containsKey(state)
     fun hasTransition(state: State, byChar: TransitionCharacter): Boolean
@@ -17,7 +18,6 @@ class Automata<To> {
 
     fun addTransition(from: State, byChar: Char, to: To) = addTransition(from, TransitionCharacter(byChar..byChar), to)
 
-//    fun transitOrDefault(from: State) = transitionTable.getOrDefault(from, TransitionTable())
     fun transit(from: State) = transitionTable[from]
     fun transit(from: State, byChar: TransitionCharacter) = (transit(from) ?: TransitionTable())[byChar]
     fun transit(from: State, byChar: Char) = transit(from, TransitionCharacter(byChar..byChar))

@@ -37,9 +37,8 @@ fun NFAAutomata.move(states: HashSet<State>, character: TransitionCharacter): Ha
 
 fun NFAAutomata.uniteAutomatas(other: NFAAutomata, withAccepting: Boolean = false) {
     for ((from, transitionColumn) in other.transitionTable) {
-        for ((char, to) in transitionColumn.table) {
+        for ((char, to) in transitionColumn) {
             addTransition(from, char, to)
-
             if (withAccepting && other.acceptingStates.intersect(to).isNotEmpty())
                 acceptingStates.addAll(to)
         }
@@ -47,7 +46,9 @@ fun NFAAutomata.uniteAutomatas(other: NFAAutomata, withAccepting: Boolean = fals
 }
 
 
-fun NFAAutomata.convertToDFA(alphabet: Collection<TransitionCharacter>): Pair<DFAAutomata, HashMap<State, HashSet<State>>> {
+fun NFAAutomata.convertToDFA(
+    alphabet: Collection<TransitionCharacter>
+): Pair<DFAAutomata, HashMap<State, HashSet<State>>> {
     val dfaAutomata = DFAAutomata()
 
     val stateSetsId = HashMap<HashSet<State>, State>()
@@ -55,7 +56,7 @@ fun NFAAutomata.convertToDFA(alphabet: Collection<TransitionCharacter>): Pair<DF
 
     val almostDFAStartState = epsilonClosure(startState)
     stateSetsId[almostDFAStartState] = dfaAutomata.startState
-    if (almostDFAStartState.any { it in acceptingStates })
+    if (almostDFAStartState.any { isAccepting(it) })
         dfaAutomata.addAccepting(dfaAutomata.startState)
 
     val untrackedStates = Stack<HashSet<State>>()
@@ -65,14 +66,15 @@ fun NFAAutomata.convertToDFA(alphabet: Collection<TransitionCharacter>): Pair<DF
         val currentState = untrackedStates.pop()
         // Если мы еще не присвоили этому множеству свое DFA состояние, делаем это
         val currentDfaState: State = stateSetsId[currentState] ?: run {
-            stateSetsId[currentState] = if (currentState.any { it in acceptingStates })
-                dfaAutomata.createAcceptingState()
-            else
-                dfaAutomata.createState()
+            stateSetsId[currentState] =
+                if (currentState.any { isAccepting(it) })
+                    dfaAutomata.createAcceptingState()
+                else
+                    dfaAutomata.createState()
             stateSetsId[currentState]!!
         }
 
-        if (dfaStateToId[currentDfaState] == null) {
+        if (!dfaStateToId.contains(currentDfaState)) {
             dfaStateToId[currentDfaState] = currentState
         }
 
@@ -83,10 +85,11 @@ fun NFAAutomata.convertToDFA(alphabet: Collection<TransitionCharacter>): Pair<DF
 
             // Если мы еще не присвоили этому множеству свое DFA состояние, делаем это
             val dfaUState: State = stateSetsId[uState] ?: run {
-                stateSetsId[uState] = if (uState.any { it in acceptingStates })
-                    dfaAutomata.createAcceptingState()
-                else
-                    dfaAutomata.createState()
+                stateSetsId[uState] =
+                    if (uState.any { isAccepting(it) })
+                        dfaAutomata.createAcceptingState()
+                    else
+                        dfaAutomata.createState()
                 stateSetsId[uState]!!
             }
 
@@ -103,6 +106,6 @@ fun NFAAutomata.convertToDFA(alphabet: Collection<TransitionCharacter>): Pair<DF
 }
 
 
-fun DFAAutomata.minimize(alphabet: HashSet<TransitionCharacter>) {
+fun DFAAutomata.minimize(alphabet: Collection<TransitionCharacter>) {
 
 }

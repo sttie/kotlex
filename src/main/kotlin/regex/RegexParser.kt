@@ -143,7 +143,6 @@ object RegexParser {
         val rightCharNode = parseChar(false)
 
         alphabet.add(TransitionCharacter(leftCharNode.char..rightCharNode.char))
-
         return RangeNode(leftCharNode, rightCharNode)
     }
 
