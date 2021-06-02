@@ -3,8 +3,10 @@ package parsing
 import automatas.TransitionCharacter
 import java.lang.IllegalArgumentException
 
+//typealias FormatFileAutomata = Automata<FormatFileState>
+
 class FormatFileLexer(private val input: String) {
-    private val automata: FormatFileLexAutomata = FormatFileLexAutomata()
+    private val automata = FormatFileAutomata()
     private var current: Int = 0
 
     fun getToken(): FormatFileToken {

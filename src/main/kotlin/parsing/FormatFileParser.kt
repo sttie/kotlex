@@ -4,7 +4,8 @@ import java.io.File
 import java.lang.IllegalStateException
 import api.*
 
-object FormatFileParser {    private lateinit var lexer: FormatFileLexer
+object FormatFileParser {
+    private lateinit var lexer: FormatFileLexer
     private lateinit var currentToken: FormatFileToken
 
     fun parseFile(file: File): Format {

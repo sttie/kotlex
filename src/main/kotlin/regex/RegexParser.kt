@@ -1,19 +1,20 @@
 package regex
 
 import automatas.TransitionCharacter
+import automatas.toTransitionCharacter
 import regex.ast.*
 
 object RegexParser {
     private var current = 0
     private var tokens = ArrayList<RegexToken>()
-    private val alphabet = HashSet<Char>()
+    private val alphabet = HashSet<TransitionCharacter>()
 
-    fun parseRegex(regex: String): Pair<RegexNode, HashSet<Char>> {
+    fun parseRegex(regex: String): Pair<RegexNode, HashSet<TransitionCharacter>> {
         tokens = RegexLexer.lex(regex)
         current = 0
         alphabet.clear()
 
-        return parseUnion() to alphabet
+        return parseUnion() to HashSet(alphabet)
     }
 
     // union ::= simple-RE ("|" simple-RE)*
@@ -130,8 +131,7 @@ object RegexParser {
     private fun parseSetItem(): RangeNode {
         match(lookToken().type == RegexType.CHAR, "Expected char")
         return if (lookNextToken().type == RegexType.MINUS) parseRange() else {
-            val charNode = parseChar(false)
-            alphabet.add(charNode.char)
+            val charNode = parseChar()
             return RangeNode(charNode, charNode)
         }
     }
@@ -142,9 +142,7 @@ object RegexParser {
         match(getToken().type == RegexType.MINUS, "Expected \"-\"")
         val rightCharNode = parseChar(false)
 
-//        alphabet.add(TransitionCharacter(leftCharNode.char..rightCharNode.char))
-        for (char in leftCharNode.char..rightCharNode.char)
-            alphabet.add(char)
+        alphabet.add(TransitionCharacter(leftCharNode.char..rightCharNode.char))
 
         return RangeNode(leftCharNode, rightCharNode)
     }
@@ -156,7 +154,7 @@ object RegexParser {
         ) {
             val charNode = CharNode(getToken().lexeme[0])
             if (updateAlphabet)
-                alphabet.add(charNode.char)
+                alphabet.add(charNode.char.toTransitionCharacter())
             return charNode
         }
 
@@ -165,7 +163,7 @@ object RegexParser {
 
     private fun parseString(): StringNode {
         for (char in lookToken().lexeme)
-            alphabet.add(char)
+            alphabet.add(char.toTransitionCharacter())
         return StringNode(getToken().lexeme)
     }
 
@@ -197,9 +195,4 @@ object RegexParser {
     )
 
     private fun notEnd(offset: Int = 0): Boolean = current < tokens.size - offset
-}
-
-private fun HashSet<TransitionCharacter>.addAll(elements: CharRange) {
-    for (char in elements)
-        add(TransitionCharacter(char))
 }

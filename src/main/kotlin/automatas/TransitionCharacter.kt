@@ -1,37 +1,32 @@
 package automatas
 
-class TransitionCharacter {
-    var characters = ArrayList<Char>()
-    private var type = ""
-
+class TransitionCharacter(val characters: CharRange) {
     companion object {
-        val epsilon = TransitionCharacter("epsilon")
-        val any = TransitionCharacter("any")
+        val EPSILON = TransitionCharacter(CharRange.EMPTY)
+        val ANY = TransitionCharacter(CharRange.EMPTY)
     }
 
-    constructor(range: CharRange) {
-        range.forEach { characters.add(it) }
-    }
+    fun isRange(): Boolean = !isSpecial() && characters.first < characters.last
+    fun isSpecial(): Boolean = this === EPSILON || this === ANY
+    fun isEpsilon(): Boolean = this === EPSILON
+    fun isAny(): Boolean = this === ANY
 
-    constructor(char: Char) {
-        characters.add(char)
-    }
+    operator fun contains(char: Char): Boolean = char in characters
+    operator fun contains(charRange: TransitionCharacter): Boolean =
+        characters.first <= charRange.characters.first && charRange.characters.last <= characters.last
 
-    private constructor(type_: String) {
-        type = type_
-    }
+    override fun hashCode(): Int = characters.hashCode()
+    override fun equals(other: Any?): Boolean =
+        other is TransitionCharacter && (isSpecial() && (isEpsilon() && other.isEpsilon()
+                || isAny() && other.isAny()) || characters == other.characters)
 
-    operator fun contains(char: Char) = char in characters
-
-    fun add(char: Char) {
-        characters.add(char)
-    }
-    fun add(char: CharRange) {
-        characters.addAll(char)
-    }
-
-    fun isEpsilon() = type == "epsilon"
-    fun isAny() = type == "any"
-    fun isSpecial() = type == "any" || type == "epsilon"
-    fun isRange(): Boolean = characters.first() != characters.last()
+    override fun toString(): String =
+        when (this) {
+            EPSILON -> "Epsilon"
+            ANY     -> "Any"
+            else    -> characters.toString()
+        }
 }
+
+fun Char.toTransitionCharacter(): TransitionCharacter
+    = TransitionCharacter(this..this)

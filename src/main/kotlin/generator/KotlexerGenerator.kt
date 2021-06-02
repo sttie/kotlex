@@ -1,12 +1,10 @@
 package generator
 
+import api.Format
 import automatas.*
-import automatas.dfa.DFAAutomata
-import automatas.nfa.NFAAutomata
-import java.io.File
-import api.*
 import regex.RegexParser
-import regex.visitors.AutomataVisitor
+import regex.visitors.NFAAutomataVisitor
+import java.io.File
 
 
 fun File.appendTextWithTabs(text: String, tabs: Int) {
@@ -137,14 +135,14 @@ object KotlexerGenerator {
     private fun generateTransitionTable(dfa: DFAAutomata) {
         outputFile.appendTextWithTabs("val kotlexTable = HashMap<Int, HashMap<Char, Int>>()\n", tabs)
 
-        for ((state, _) in dfa.transitionTable.transitionTable) {
+        for ((state, _) in dfa.transitionTable) {
             generateNthStateTable(state, dfa)
         }
 
         outputFile.appendTextWithTabs("init {\n", tabs)
         tabs++
 
-        for ((state, _) in dfa.transitionTable.transitionTable) {
+        for ((state, _) in dfa.transitionTable) {
             outputFile.appendTextWithTabs("set${state.id}State()\n", tabs)
         }
 
@@ -155,43 +153,41 @@ object KotlexerGenerator {
     private fun generateNthStateTable(state: State, dfa: DFAAutomata) {
         generateFunction("set${state.id}State", "", "Unit") {
             outputFile.appendTextWithTabs("kotlexTable[${state.id}] = HashMap()\n", tabs)
-            for ((transitionChar, destState) in dfa.transit(state) ?: HashMap()) {
-                for (char in transitionChar.characters)
-                    outputFile.appendTextWithTabs("kotlexTable[${state.id}]!!['${char}'] = ${destState.id}\n", tabs)
+            for ((transitionChar, destState) in (dfa.transit(state) ?: TransitionTable()).table) {
+                generateStateTransition(state.id, transitionChar, destState.id)
             }
         }
     }
 
-    private fun generateStateTransition(state: State, transition: HashMap<TransitionCharacter, State>) {
-        outputFile.appendTextWithTabs("${state.id} -> ", tabs)
-
-        val oldTabs = tabs
-        tabs = 0
-        generateWhenDeclaration("input[current]") {
-            tabs = oldTabs + 1
-            for ((char, destState) in transition)
-                outputFile.appendTextWithTabs("in '${char.characters.first()}'..'${char.characters.last()}' -> newState = ${destState.id}\n", tabs)
-            outputFile.appendTextWithTabs("else -> newState = -1\n", tabs)
+    private fun generateStateTransition(stateId: Int, transitionChar: TransitionCharacter, destId: Int) {
+        if (transitionChar.isRange()) {
+            outputFile.appendTextWithTabs("for (char in '${transitionChar.characters.first}'..'${transitionChar.characters.last}')\n", tabs)
+            tabs++
+            outputFile.appendTextWithTabs("kotlexTable[$stateId]!![char] = $destId", tabs)
+            tabs--
         }
-        tabs = oldTabs
+        else {
+            outputFile.appendTextWithTabs("kotlexTable[$stateId]!!['${transitionChar.characters.first}'] = $destId", tabs)
+        }
+        outputFile.appendTextWithTabs("\n", 0)
     }
 
     private fun generateDfaFromRules(
         format: Format
-    ): Triple<DFAAutomata, HashSet<Char>, HashMap<State, String>> {
+    ): Triple<DFAAutomata, HashSet<TransitionCharacter>, HashMap<State, String>> {
         val nfa = NFAAutomata()
-        val alphabetSet = HashSet<Char>()
+        val alphabetSet = HashSet<TransitionCharacter>()
         val acceptingStatesToType = HashMap<State, String>()
 
         for (rule in format.rulesList) {
             val (ruleAst, alphabet) = RegexParser.parseRegex(rule.regex)
             alphabetSet.addAll(alphabet)
-            val ruleNfa = ruleAst.accept(AutomataVisitor()) as NFAAutomata
+            val ruleNfa = ruleAst.accept(NFAAutomataVisitor()) as NFAAutomata
 
-            for (acceptingState in ruleNfa.helpingAcceptingStatesSet)
+            for (acceptingState in ruleNfa.acceptingStates)
                 acceptingStatesToType[acceptingState] = rule.regexType
 
-            ruleNfa.addTransition(nfa.startState, TransitionCharacter.epsilon, ruleNfa.startState)
+            nfa.addStateToSet(nfa.startState, TransitionCharacter.EPSILON, ruleNfa.startState)
             nfa.uniteAutomatas(ruleNfa, true)
         }
 

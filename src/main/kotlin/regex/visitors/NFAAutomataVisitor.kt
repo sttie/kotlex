@@ -1,24 +1,21 @@
 package regex.visitors
 
-import automatas.State
-import automatas.TransitionCharacter
-import automatas.nfa.NFAAutomata
-import automatas.uniteAutomatas
+import automatas.*
 import regex.ast.*
 
 
-class AutomataVisitor : Visitor() {
+class NFAAutomataVisitor : Visitor() {
     override fun visitAnyNode(node: AnyNode): NFAAutomata {
         val anyNfa = NFAAutomata()
         val anyNfaAcceptingState = anyNfa.createAcceptingState()
 
-        anyNfa.addTransition(anyNfa.startState, TransitionCharacter.any, anyNfaAcceptingState)
+        anyNfa.addStateToSet(anyNfa.startState, TransitionCharacter.ANY, anyNfaAcceptingState)
 
         return anyNfa
     }
 
     override fun visitEosNode(node: EosNode): NFAAutomata {
-        return NFAAutomata()
+        TODO()
     }
 
     override fun visitPlusNode(node: PlusNode): NFAAutomata {
@@ -29,10 +26,13 @@ class AutomataVisitor : Visitor() {
             return plusNfaAutomata
 
         val underStarAutomata = (node.child ?: EmptyNode).accept(this) as NFAAutomata
-        underStarAutomata.addTransition(underStarAutomata.acceptingState, TransitionCharacter.epsilon, underStarAutomata.startState)
-        underStarAutomata.addTransition(underStarAutomata.acceptingState, TransitionCharacter.epsilon, plusAcceptingState)
+        underStarAutomata.addStateToSet(underStarAutomata.getAcceptingState(),
+            TransitionCharacter.EPSILON, underStarAutomata.startState)
+        underStarAutomata.addStateToSet(underStarAutomata.getAcceptingState(),
+            TransitionCharacter.EPSILON, plusAcceptingState)
 
-        plusNfaAutomata.addTransition(plusNfaAutomata.startState, TransitionCharacter.epsilon, underStarAutomata.startState)
+        plusNfaAutomata.addStateToSet(plusNfaAutomata.startState,
+            TransitionCharacter.EPSILON, underStarAutomata.startState)
 
         plusNfaAutomata.uniteAutomatas(underStarAutomata)
 
@@ -43,9 +43,8 @@ class AutomataVisitor : Visitor() {
         val rangeNfaAutomata = NFAAutomata()
         val rangeAcceptingState = rangeNfaAutomata.createAcceptingState()
 
-        rangeNfaAutomata.addTransition(
-            rangeNfaAutomata.startState, TransitionCharacter(node.left.char..node.right.char), rangeAcceptingState
-        )
+        rangeNfaAutomata.addStateToSet(rangeNfaAutomata.startState,
+            TransitionCharacter(node.left.char..node.right.char), rangeAcceptingState)
 
         return rangeNfaAutomata
     }
@@ -55,15 +54,15 @@ class AutomataVisitor : Visitor() {
         val setAcceptingState = setAutomata.createAcceptingState()
 
         val leftAutomata = (node.left ?: EmptyNode).accept(this) as NFAAutomata
-        setAutomata.addTransition(setAutomata.startState, TransitionCharacter.epsilon, leftAutomata.startState)
+        setAutomata.addStateToSet(setAutomata.startState, TransitionCharacter.EPSILON, leftAutomata.startState)
         setAutomata.uniteAutomatas(leftAutomata)
-        setAutomata.addTransition(leftAutomata.acceptingState, TransitionCharacter.epsilon, setAcceptingState)
+        setAutomata.addStateToSet(leftAutomata.getAcceptingState(), TransitionCharacter.EPSILON, setAcceptingState)
 
         val rightAutomata = (node.right ?: EmptyNode).accept(this) as NFAAutomata
         if (!rightAutomata.isEmpty()) {
-            setAutomata.addTransition(setAutomata.startState, TransitionCharacter.epsilon, rightAutomata.startState)
+            setAutomata.addStateToSet(setAutomata.startState, TransitionCharacter.EPSILON, rightAutomata.startState)
             setAutomata.uniteAutomatas(rightAutomata)
-            setAutomata.addTransition(rightAutomata.acceptingState, TransitionCharacter.epsilon, setAcceptingState)
+            setAutomata.addStateToSet(rightAutomata.getAcceptingState(), TransitionCharacter.EPSILON, setAcceptingState)
         }
 
         return setAutomata
@@ -78,16 +77,16 @@ class AutomataVisitor : Visitor() {
         simpleRegexAutomata.uniteAutomatas(leftAutomata)
 
         if (!rightAutomata.isEmpty()) {
-            mergeStates(simpleRegexAutomata, leftAutomata.acceptingState, rightAutomata, rightAutomata.startState)
+            mergeStates(simpleRegexAutomata, leftAutomata.getAcceptingState(), rightAutomata, rightAutomata.startState)
             simpleRegexAutomata.uniteAutomatas(rightAutomata)
             simpleRegexAutomata.removeState(rightAutomata.startState)
 
-            simpleRegexAutomata.setAccepting(
-                if (!rightAutomata.isEmpty()) rightAutomata.acceptingState
-                else leftAutomata.acceptingState
+            simpleRegexAutomata.addAccepting(
+                if (!rightAutomata.isEmpty()) rightAutomata.getAcceptingState()
+                else leftAutomata.getAcceptingState()
             )
         } else {
-            simpleRegexAutomata.setAccepting(leftAutomata.acceptingState)
+            simpleRegexAutomata.addAccepting(leftAutomata.getAcceptingState())
         }
 
         return simpleRegexAutomata
@@ -98,11 +97,11 @@ class AutomataVisitor : Visitor() {
         val starAcceptingState = starNfaAutomata.createAcceptingState()
 
         val underStarAutomata = (node.child ?: EmptyNode).accept(this) as NFAAutomata
-        underStarAutomata.addTransition(underStarAutomata.acceptingState, TransitionCharacter.epsilon, underStarAutomata.startState)
-        underStarAutomata.addTransition(underStarAutomata.acceptingState, TransitionCharacter.epsilon, starAcceptingState)
+        underStarAutomata.addStateToSet(underStarAutomata.getAcceptingState(), TransitionCharacter.EPSILON, underStarAutomata.startState)
+        underStarAutomata.addStateToSet(underStarAutomata.getAcceptingState(), TransitionCharacter.EPSILON, starAcceptingState)
 
-        starNfaAutomata.addTransition(starNfaAutomata.startState, TransitionCharacter.epsilon, starAcceptingState)
-        starNfaAutomata.addTransition(starNfaAutomata.startState, TransitionCharacter.epsilon, underStarAutomata.startState)
+        starNfaAutomata.addStateToSet(starNfaAutomata.startState, TransitionCharacter.EPSILON, starAcceptingState)
+        starNfaAutomata.addStateToSet(starNfaAutomata.startState, TransitionCharacter.EPSILON, underStarAutomata.startState)
 
         starNfaAutomata.uniteAutomatas(underStarAutomata)
 
@@ -114,10 +113,10 @@ class AutomataVisitor : Visitor() {
         val starAcceptingState = starNfaAutomata.createAcceptingState()
 
         val underStarAutomata = (node.child ?: EmptyNode).accept(this) as NFAAutomata
-        underStarAutomata.addTransition(underStarAutomata.acceptingState, TransitionCharacter.epsilon, starAcceptingState)
+        underStarAutomata.addStateToSet(underStarAutomata.getAcceptingState(), TransitionCharacter.EPSILON, starAcceptingState)
 
-        starNfaAutomata.addTransition(starNfaAutomata.startState, TransitionCharacter.epsilon, starAcceptingState)
-        starNfaAutomata.addTransition(starNfaAutomata.startState, TransitionCharacter.epsilon, underStarAutomata.startState)
+        starNfaAutomata.addStateToSet(starNfaAutomata.startState, TransitionCharacter.EPSILON, starAcceptingState)
+        starNfaAutomata.addStateToSet(starNfaAutomata.startState, TransitionCharacter.EPSILON, underStarAutomata.startState)
 
         starNfaAutomata.uniteAutomatas(underStarAutomata)
 
@@ -130,22 +129,22 @@ class AutomataVisitor : Visitor() {
         val unionAcceptingState = unionNfaAutomata.createAcceptingState()
 
         val leftAutomata = (node.left ?: EmptyNode).accept(this) as NFAAutomata
-        unionNfaAutomata.addTransition(unionNfaAutomata.startState, TransitionCharacter.epsilon, leftAutomata.startState)
+        unionNfaAutomata.addStateToSet(unionNfaAutomata.startState, TransitionCharacter.EPSILON, leftAutomata.startState)
         unionNfaAutomata.uniteAutomatas(leftAutomata)
-        unionNfaAutomata.addTransition(leftAutomata.acceptingState, TransitionCharacter.epsilon, unionAcceptingState)
+        unionNfaAutomata.addStateToSet(leftAutomata.getAcceptingState(), TransitionCharacter.EPSILON, unionAcceptingState)
 
         val rightAutomata = (node.right ?: EmptyNode).accept(this) as NFAAutomata
 
         if (!rightAutomata.isEmpty()) {
-            unionNfaAutomata.addTransition(
+            unionNfaAutomata.addStateToSet(
                 unionNfaAutomata.startState,
-                TransitionCharacter.epsilon,
+                TransitionCharacter.EPSILON,
                 rightAutomata.startState
             )
             unionNfaAutomata.uniteAutomatas(rightAutomata)
-            unionNfaAutomata.addTransition(
-                rightAutomata.acceptingState,
-                TransitionCharacter.epsilon,
+            unionNfaAutomata.addStateToSet(
+                rightAutomata.getAcceptingState(),
+                TransitionCharacter.EPSILON,
                 unionAcceptingState
             )
         }
@@ -160,11 +159,11 @@ class AutomataVisitor : Visitor() {
         var currentState = stringNfaAutomata.startState
         for (i in 0 until node.lexeme.length - 1) {
             val newState = stringNfaAutomata.createState()
-            stringNfaAutomata.addTransition(currentState, TransitionCharacter(node.lexeme[i]), newState)
+            stringNfaAutomata.addStateToSet(currentState, node.lexeme[i].toTransitionCharacter(), newState)
             currentState = newState
         }
 
-        stringNfaAutomata.addTransition(currentState, TransitionCharacter(node.lexeme.last()), stringNfaAcceptingState)
+        stringNfaAutomata.addStateToSet(currentState, node.lexeme.last().toTransitionCharacter(), stringNfaAcceptingState)
 
         return stringNfaAutomata
     }
@@ -173,7 +172,8 @@ class AutomataVisitor : Visitor() {
     override fun visitCharNode(node: CharNode): NFAAutomata {
         val charNfaAutomata = NFAAutomata()
         val charAcceptingState = charNfaAutomata.createAcceptingState()
-        charNfaAutomata.addTransition(charNfaAutomata.startState, TransitionCharacter(node.char), charAcceptingState)
+        charNfaAutomata.addStateToSet(charNfaAutomata.startState,
+            TransitionCharacter(node.char..node.char), charAcceptingState)
         return charNfaAutomata
     }
 
@@ -185,8 +185,8 @@ class AutomataVisitor : Visitor() {
         else if (!nfa2.hasState(state2))
             throw IllegalStateException("lol what in mergeStates?")
 
-        for ((char, toState) in nfa2.transit(state2)!!) {
-            nfa1.addTransition(state1, char, toState)
+        for ((char, toState) in nfa2.transit(state2)!!.table) {
+            nfa1.addStatesToSet(state1, char, toState)
         }
     }
 }
