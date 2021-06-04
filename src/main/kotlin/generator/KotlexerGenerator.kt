@@ -22,6 +22,7 @@ object KotlexerGenerator {
     }
 
     private fun generateImportCode(importList: ArrayList<String>) {
+        appendTextWithTabs("import java.util.HashMap\n")
         for (importStatement in importList)
             appendTextWithTabs("import $importStatement\n")
         appendTextWithTabs("\n\n")
