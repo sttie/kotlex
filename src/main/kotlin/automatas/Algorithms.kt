@@ -3,6 +3,7 @@ package automatas
 import java.util.*
 import kotlin.collections.HashMap
 import kotlin.collections.HashSet
+import automatas.transition.*
 
 
 fun NFAAutomata.epsilonClosure(state: State): HashSet<State>

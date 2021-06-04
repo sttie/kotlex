@@ -1,7 +1,9 @@
 package regex
 
-import automatas.TransitionCharacter
-import automatas.toTransitionCharacter
+import automatas.transition.Transition
+import automatas.transition.TransitionString
+import automatas.transition.TransitionCharacter
+import automatas.transition.toTransitionCharacter
 import regex.ast.*
 
 object RegexParser {

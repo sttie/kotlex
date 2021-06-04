@@ -1,8 +1,7 @@
 package parsing
 
-import automatas.TransitionCharacter
 import automatas.TransitionTable
-import automatas.toTransitionCharacter
+import automatas.transition.*
 
 class FormatFileAutomata {
     private var transitionTable = HashMap<FormatFileState, TransitionTable<FormatFileState>>()

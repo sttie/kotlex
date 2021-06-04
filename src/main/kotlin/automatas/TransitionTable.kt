@@ -1,5 +1,7 @@
 package automatas
 
+import automatas.transition.*
+
 class TransitionTable<T> {
     val table = LinkedHashMap<TransitionCharacter, T>()
 

@@ -5,7 +5,7 @@ import automatas.*
 import regex.RegexParser
 import regex.visitors.NFAAutomataVisitor
 import java.io.File
-
+import automatas.transition.*
 
 object KotlexerGenerator {
     lateinit var outputFile: File

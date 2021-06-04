@@ -2,6 +2,7 @@ package regex.visitors
 
 import automatas.*
 import regex.ast.*
+import automatas.transition.*
 
 
 class NFAAutomataVisitor : Visitor() {

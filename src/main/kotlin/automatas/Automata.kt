@@ -1,5 +1,7 @@
 package automatas
 
+import automatas.transition.*
+
 class Automata<To> {
     val transitionTable = HashMap<State, TransitionTable<To>>()
     val acceptingStates = HashSet<State>()

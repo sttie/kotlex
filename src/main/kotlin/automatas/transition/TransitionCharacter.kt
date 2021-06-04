@@ -1,6 +1,6 @@
-package automatas
+package automatas.transition
 
-class TransitionCharacter(val characters: CharRange) {
+class TransitionCharacter(val characters: CharRange) : Transition {
     companion object {
         val EPSILON = TransitionCharacter(CharRange.EMPTY)
         val ANY = TransitionCharacter(CharRange.EMPTY)

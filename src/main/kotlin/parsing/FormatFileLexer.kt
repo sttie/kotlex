@@ -1,6 +1,6 @@
 package parsing
 
-import automatas.TransitionCharacter
+import automatas.transition.*
 import java.lang.IllegalArgumentException
 
 //typealias FormatFileAutomata = Automata<FormatFileState>
