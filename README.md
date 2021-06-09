@@ -5,8 +5,11 @@
 
 ## Формат файла с описанием
 
-Пример файла с описанием: [тык](https://github.com/sttie/kotlex/blob/master/examples/SimpleLexer.kt)
+Пример файла с описанием: [тык](https://github.com/sttie/kotlex/blob/master/examples/simple_ids.kotlex)
 
+Сгенерированный по этому файлу лексер: [тык](https://github.com/sttie/kotlex/blob/master/examples/SimpleLexer.kt)
+
+\
 Весь файл с описанием генерируемого лексического анализатора имеет 4 раздела:
 
 1. Раздел с импортами. Здесь в каждой новой строке необходимо указать те файлы, которые вы хотите импортировать в итоговый лексер. Например:
