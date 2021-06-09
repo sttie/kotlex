@@ -1,0 +1,11 @@
+regex         ::= union*
+union         ::= simple-RE ("|" simple-RE)*
+simple-RE     ::= basic-RE*
+basic-RE      ::= elementary-RE ("*" | "+" | "?")?
+elementary-RE ::= "(" regex ")" | any | eos | char | set
+any           ::= "."
+eos           ::= "$"
+set           ::= "[" ("^")? (set-item)* "]"
+set-item      ::= range | char
+range         ::= char "-" char
+char          ::= any non metacharacter | "\" metacharacter

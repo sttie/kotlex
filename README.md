@@ -13,7 +13,6 @@
 import java.lang.StringBuilder
 import java.util.Stack
 import my.cool.library
-
 ```
 
 2. Раздел с типом токенов. Этот раздел состоит лишь из одного объявления вида ```enumtype is path```, где path - путь к файлу с классом, который вы хотите установить в качестве типа токенов. Наример:
