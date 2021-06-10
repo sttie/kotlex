@@ -1,0 +1,12 @@
+format_file := import_list data_list rules_list
+
+import_list := (import_declaration newline)*
+import_declaration := "import" path
+
+data_list        := "data" ":" newline (data_declaration newline)*
+data_declaration := kotlin-declarations
+
+rules_list  := "rules" ":" newline (rule_declaration newline)*
+rule_declaration := id ":=" regex "," path
+
+path := id ("." id)*

@@ -36,23 +36,20 @@ var counter: Int = 0
 var id: String = "MyLexer"
 ```
 
-4. Раздел с правилами. В этом разделе, начинающемся с ключевого слова ```rules```, определяются регулярные выражения, на основе которых будет работать сгенерированный лексер. После каждого регулярного выражения можно написать код, который будет выполняться каждый раз после обнаружения этого регулярного выражения. Например:
+4. Раздел с правилами. В этом разделе, начинающемся с ключевого слова ```rules```, определяются регулярные 
+   выражения, на основе которых будет работать сгенерированный лексер. Например:
 
 ```
 rules:
-newline    := "\n", MyLangTokenType.NEWLINE { newlineCounter++ }
-lbracket   := "(", MyLangTokenType.LBRACKET { }
-rbracket   := ")", MyLangTokenType.RBRACKET { }
-while      := "while", MyLangTokenType.WHILE { }
-assign     := "=", MyLangTokenType.ASSIGN { }
-plus       := "+", MyLangTokenType.PLUS { }
-minus      := "-", MyLangTokenType.MINUS { }
-identifier := [a-zA-Z_][0-9a-zA-Z_]*, MyLangTokenType.ID {
-    println("Detected identifier!")
-}
+newline    := "\n", MyLangTokenType.NEWLINE
+lbracket   := "(", MyLangTokenType.LBRACKET
+rbracket   := ")", MyLangTokenType.RBRACKET
+while      := "while", MyLangTokenType.WHILE
+assign     := "=", MyLangTokenType.ASSIGN
+plus       := "+", MyLangTokenType.PLUS
+minus      := "-", MyLangTokenType.MINUS
+identifier := [a-zA-Z_][0-9a-zA-Z_]*, MyLangTokenType.ID
 ```
-
-Именно в фигурных скобках определяется код, выполняемый после обнаружения регулярного выражения.
 
 Расширение файла с описанием - **.kotlex**.
 

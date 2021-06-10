@@ -147,18 +147,18 @@ object FormatFileParser {
         getToken()
 
         val regexType = parsePath()
+//
+//        match(currentToken.type, FormatFileTokenType.LBRACE)
+//        lexer.skipWhitespaces()
+//
+//        // parse kotlin code
+//        val actionCode = lexer.getTextUntil('}')
+//
+//        getToken()
+//        match(currentToken.type, FormatFileTokenType.RBRACE)
 
-        match(currentToken.type, FormatFileTokenType.LBRACE)
-        lexer.skipWhitespaces()
-
-        // parse kotlin code
-        val actionCode = lexer.getTextUntil('}')
-
-        getToken()
-        match(currentToken.type, FormatFileTokenType.RBRACE)
-
-        getToken()
-        return Rule(regexId, regex, regexType, actionCode)
+//        getToken()
+        return Rule(regexId, regex, regexType, "")
     }
 
     private fun skipWhitespaces() {
