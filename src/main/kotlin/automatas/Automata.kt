@@ -7,6 +7,8 @@ class Automata<To> {
     val acceptingStates = HashSet<State>()
     var startState: State = createState()
 
+    fun allStates(): HashSet<State>
+        = HashSet(transitionTable.keys)
 
     fun hasState(state: State): Boolean = transitionTable.containsKey(state)
     fun hasTransition(state: State, byChar: TransitionCharacter): Boolean
@@ -29,6 +31,10 @@ class Automata<To> {
 
     companion object {
         var freeId = 0
+
+        fun resetIdCounter() {
+            freeId = 0
+        }
     }
 
     fun createState() = State(freeId++)

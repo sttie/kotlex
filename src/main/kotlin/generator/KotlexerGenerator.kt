@@ -182,7 +182,7 @@ object KotlexerGenerator {
         }
 
         val (dfa, dfaToNfaStates) = nfa.convertToDFA(alphabetSet)
-        dfa.minimize(alphabetSet)
+//        dfa.minimize(alphabetSet)
 
         val acceptingDfaStatesType = HashMap<State, String>()
         for ((acceptingNfaState, tokenType) in acceptingStatesToType) {

@@ -107,6 +107,6 @@ fun NFAAutomata.convertToDFA(
 }
 
 
-fun DFAAutomata.minimize(alphabet: Collection<TransitionCharacter>) {
-
+fun minimizeDFA(dfa: DFAAutomata, alphabet: Collection<TransitionCharacter>): DFAAutomata {
+    TODO()
 }
